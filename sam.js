@@ -25,7 +25,7 @@
     // 3. Header (Draggable)
     const header = d.createElement('div');
     header.style = 'padding:10px; background:#004589; color:#fff; cursor:move; font-weight:bold; user-select:none; display:flex; justify-content:space-between; flex-shrink:0;';
-    header.innerHTML = '<span>SAM Assistant</span><div><span id="min" style="cursor:pointer;margin-right:10px">_</span><span id="cls" style="cursor:pointer">×</span></div>';
+    header.innerHTML = '<span>SAM - Intervención QF</span><div><span id="min" style="cursor:pointer;margin-right:10px">_</span><span id="cls" style="cursor:pointer">×</span></div>';
     m.appendChild(header);
 
     // 4. Body Container
