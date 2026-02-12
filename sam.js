@@ -86,7 +86,7 @@
                 <div id="deck" style="background:#e9ecef; padding:8px; border-radius:5px; border:1px solid #ccc"></div>
                 
                 <button id="resetBtn" style="width:100%; margin-top:8px; border:none; color:#d9534f; cursor:pointer; font-size:10px; background:none">
-                    RESET (Borrar Cache y Fecha)
+                    RESET (Cambiar servicio)
                 </button>
             </div>
         `;
