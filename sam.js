@@ -61,7 +61,7 @@
                 <input id="filter" placeholder="Filtrar paciente..." style="width:100%;margin-bottom:5px;box-sizing:border-box;padding:4px;">
                 <select id="pList" size="7" style="width:100%;font-size:11px;flex-grow:1;border:1px solid #999;background:#fff;"></select>
                 <button id="searchBtn" style="width:100%;height:35px;background:#004589;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">BUSCAR FICHA</button>
-                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE (NUEVA PESTAÑA)</button>
+                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE</button>
             </div>
             <div style="flex-shrink:0;margin-top:10px;border-top:2px solid #ccc;padding-top:10px">
                 <b style="color:#555;font-size:11px">MENÚ DE ACCIONES:</b>
