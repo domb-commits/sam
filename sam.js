@@ -79,7 +79,6 @@
         filterInput.oninput = e => updateView(e.target.value);
         updateView('');
 
-        // Double click logic
         pList.ondblclick = () => runSearch(pList.value);
 
         const loadDeck = () => {
@@ -116,11 +115,41 @@
     const initAssistant = () => {
         const cachedData = localStorage.getItem('sam_cache');
         if (cachedData) { renderPatientScanner(JSON.parse(cachedData)); return; }
-        b.innerHTML = '<b style="color:#004589">SELECCIONE SERVICIO</b><select id="v" size="14" style="width:100%;margin:8px 0;font-size:11px;flex-grow:1"><option value="75" data-map="2" style="font-weight:bold;color:#004589">ONCOLOGIA</option><option value="86" data-map="1" style="font-weight:bold;color:#004589">UPC PEDIATRICA</option><option value="3221" data-map="5" style="font-weight:bold;color:#004589">2da INFANCIA</option><option value="78" data-map="3" style="font-weight:bold;color:#004589">UTI TPH</option><option value="82" data-map="4" style="font-weight:bold;color:#004589">UPC CARDIOVASCULAR</option><option value="83" data-map="12" style="font-weight:bold;color:#004589">UPC NEONATAL</option><option value="3190" data-map="3" style="font-weight:bold;color:#004589">CAE TRASPLANTE MEDULA</option><option disabled>----------------</option><option value="74" data-map="10">LACTANTES</option><option value="73" data-map="6">CIRUGIA</option><option value="3176" data-map="6">HOSP DIA QUIRURGICO</option><option value="61" data-map="11">PENSIONADO</option><option value="15" data-map="6">DIALISIS</option><option value="62" data-map="6">PSICUIATRIA</option><option value="3403" data-map="6">AGUDO INDIF. B</option><option value="3268" data-map="1">UAI PEDIATRICO</option><option value="80" data-map="6">URGENCIA</option></select><button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>';
-        g('go').onclick = () => {
-            const el = g('v'), opt = el.options[el.selectedIndex];
-            if (opt) fetchPatients(el.value, opt.getAttribute('data-map'));
+        
+        b.innerHTML = `
+            <b style="color:#004589">SELECCIONE SERVICIO</b>
+            <select id="v" size="14" style="width:100%;margin:8px 0;font-size:11px;flex-grow:1">
+                <option value="75" data-map="2" style="font-weight:bold;color:#004589">ONCOLOGIA</option>
+                <option value="86" data-map="1" style="font-weight:bold;color:#004589">UPC PEDIATRICA</option>
+                <option value="3221" data-map="5" style="font-weight:bold;color:#004589">2da INFANCIA</option>
+                <option value="78" data-map="3" style="font-weight:bold;color:#004589">UTI TPH</option>
+                <option value="82" data-map="4" style="font-weight:bold;color:#004589">UPC CARDIOVASCULAR</option>
+                <option value="83" data-map="12" style="font-weight:bold;color:#004589">UPC NEONATAL</option>
+                <option value="3190" data-map="3" style="font-weight:bold;color:#004589">CAE TRASPLANTE MEDULA</option>
+                <option disabled>----------------</option>
+                <option value="74" data-map="10">LACTANTES</option>
+                <option value="73" data-map="6">CIRUGIA</option>
+                <option value="3176" data-map="6">HOSP DIA QUIRURGICO</option>
+                <option value="61" data-map="11">PENSIONADO</option>
+                <option value="15" data-map="6">DIALISIS</option>
+                <option value="62" data-map="6">PSICUIATRIA</option>
+                <option value="3403" data-map="6">AGUDO INDIF. B</option>
+                <option value="3268" data-map="1">UAI PEDIATRICO</option>
+                <option value="80" data-map="6">URGENCIA</option>
+            </select>
+            <button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>
+        `;
+
+        const serviceSelect = g('v');
+        const triggerFetch = () => {
+            const opt = serviceSelect.options[serviceSelect.selectedIndex];
+            if (opt && !opt.disabled) fetchPatients(serviceSelect.value, opt.getAttribute('data-map'));
         };
+
+        // Click button logic
+        g('go').onclick = triggerFetch;
+        // Double click logic
+        serviceSelect.ondblclick = triggerFetch;
     };
 
     g('cls').onclick = () => m.remove();
