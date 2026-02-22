@@ -1,4 +1,5 @@
 (function() {
+    const VERSION = "v6.1"; // Updated version badge
     const MENU_ID = 'sam_v6';
     const d = document;
     const g = i => d.getElementById(i);
@@ -11,7 +12,7 @@
 
     const h = d.createElement('div');
     h.style = 'padding:10px;background:#004589;color:#fff;cursor:move;font-weight:bold;user-select:none;display:flex;justify-content:space-between;flex-shrink:0;';
-    h.innerHTML = '<span>SAM - Intervención QF</span><div><span id="min" style="cursor:pointer;margin-right:10px">_</span><span id="cls" style="cursor:pointer">×</span></div>';
+    h.innerHTML = `<span>SAM - Intervención QF <small style="font-size:9px;opacity:0.7">${VERSION}</small></span><div><span id="min" style="cursor:pointer;margin-right:10px">_</span><span id="cls" style="cursor:pointer">×</span></div>`;
     m.appendChild(h);
 
     const b = d.createElement('div');
@@ -60,7 +61,7 @@
                 <input id="filter" placeholder="Filtrar paciente..." style="width:100%;margin-bottom:5px;box-sizing:border-box;padding:4px;">
                 <select id="pList" size="7" style="width:100%;font-size:11px;flex-grow:1;border:1px solid #999;background:#fff;"></select>
                 <button id="searchBtn" style="width:100%;height:35px;background:#004589;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">BUSCAR FICHA</button>
-                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE</button>
+                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE (NUEVA PESTAÑA)</button>
             </div>
             <div style="flex-shrink:0;margin-top:10px;border-top:2px solid #ccc;padding-top:10px">
                 <b style="color:#555;font-size:11px">MENÚ DE ACCIONES:</b>
@@ -75,7 +76,7 @@
             data.filter(x => x.n.toLowerCase().includes(query.toLowerCase())).forEach(x => {
                 const o = d.createElement('option'); 
                 o.value = x.f; 
-                o.dataset.cta = x.cta; // Guardamos el CTA CTE en un atributo de datos
+                o.dataset.cta = x.cta;
                 o.text = x.n; 
                 pList.add(o);
             });
@@ -98,16 +99,15 @@
         g('resetBtn').onclick = () => { localStorage.removeItem('sam_cache'); localStorage.removeItem('sam_date'); initAssistant(); };
         g('searchBtn').onclick = () => runSearch(pList.value);
         
-        // Nueva logica para el boton de "Ir a ficha paciente"
         g('goToFichaBtn').onclick = () => {
             const selectedOpt = pList.options[pList.selectedIndex];
-            if (!selectedOpt) return; // No hacer nada si no hay paciente seleccionado
-            
+            if (!selectedOpt) return;
             const ctaValue = selectedOpt.dataset.cta;
             if (ctaValue) {
-                window.location.href = 'http://10.7.33.28/hlcm6/atehos003.php?id=' + ctaValue;
+                // Abre en nueva pestaña para no cerrar el SAM actual
+                window.open('http://10.7.33.28/hlcm6/atehos003.php?id=' + ctaValue, '_blank');
             } else {
-                alert('No se encontró CTA CTE para este paciente.');
+                alert('No se encontró CTA CTE.');
             }
         };
     };
@@ -122,7 +122,6 @@
             const rows = Array.from((tbls[1] || tbls[0]).querySelectorAll('tr')).slice(1);
             const cleanData = rows.map(r => {
                 const c = r.querySelectorAll('td');
-                // Extraemos c[5] para Ficha, c[6] para CTA CTE, c[7] para Nombre
                 return (c.length > 7) ? { f: c[5].innerText.trim(), cta: c[6].innerText.trim(), n: c[7].innerText.trim() } : null;
             }).filter(x => x);
             
