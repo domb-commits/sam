@@ -1,5 +1,5 @@
 (function() {
-    const VERSION = "v6.1"; // Updated version badge
+    const VERSION = "v6.2"; 
     const MENU_ID = 'sam_v6';
     const d = document;
     const g = i => d.getElementById(i);
@@ -20,9 +20,15 @@
     m.appendChild(b);
     d.body.appendChild(m);
 
-    const getToday = () => {
+    // Helpers to swap between Calendar format (YYYY-MM-DD) and Site format (DD-MM-YYYY)
+    const toSiteDate = (isoDate) => isoDate.split('-').reverse().join('-');
+    const toIsoDate = (siteDate) => siteDate.split('-').reverse().join('-');
+
+    const getTodayIso = () => {
         const t = new Date();
-        return String(t.getDate()).padStart(2, '0')+'-'+String(t.getMonth() + 1).padStart(2, '0')+'-'+t.getFullYear();
+        const dd = String(t.getDate()).padStart(2, '0');
+        const mm = String(t.getMonth() + 1).padStart(2, '0');
+        return `${t.getFullYear()}-${mm}-${dd}`;
     };
 
     const runSearch = (val) => {
@@ -38,9 +44,12 @@
     const fillForm = (type) => {
         const f = g('fecha'), srv = g('servicio'), rev = g('revisado');
         const savMap = localStorage.getItem('sam_map');
-        const customDate = g('sd').value;
-        localStorage.setItem('sam_date', customDate);
-        if (f) f.value = customDate;
+        const isoDate = g('sd').value; // Get YYYY-MM-DD from picker
+        
+        const siteDate = toSiteDate(isoDate); // Convert to DD-MM-YYYY
+        localStorage.setItem('sam_date_iso', isoDate);
+
+        if (f) f.value = siteDate;
         if (srv) srv.value = savMap || "1";
         if (rev) rev.value = type;
         [f, srv, rev].forEach(el => { if (el) el.style.background = '#c8e6c9'; });
@@ -51,17 +60,18 @@
     };
 
     const renderPatientScanner = (data) => {
-        const curD = localStorage.getItem('sam_date') || getToday();
+        const curDIso = localStorage.getItem('sam_date_iso') || getTodayIso();
         b.innerHTML = `
             <div style="flex-shrink:0;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-                <div><b style="color:#004589;font-size:11px;">FECHA:</b> <input id="sd" value="${curD}" style="width:90px;text-align:center;border:1px solid #ccc;"></div>
+                <div><b style="color:#004589;font-size:11px;">FECHA:</b> 
+                <input id="sd" type="date" value="${curDIso}" style="width:130px;border:1px solid #ccc;padding:2px;font-family:sans-serif;font-size:11px;"></div>
                 <button id="resetBtn" style="border:none;color:#d9534f;cursor:pointer;font-size:10px;background:none;font-weight:bold;">[ CAMBIAR SERVICIO ]</button>
             </div>
             <div style="flex-grow:1;display:flex;flex-direction:column;min-height:150px">
                 <input id="filter" placeholder="Filtrar paciente..." style="width:100%;margin-bottom:5px;box-sizing:border-box;padding:4px;">
                 <select id="pList" size="7" style="width:100%;font-size:11px;flex-grow:1;border:1px solid #999;background:#fff;"></select>
                 <button id="searchBtn" style="width:100%;height:35px;background:#004589;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">BUSCAR FICHA</button>
-                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE</button>
+                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE (NUEVA PESTAÑA)</button>
             </div>
             <div style="flex-shrink:0;margin-top:10px;border-top:2px solid #ccc;padding-top:10px">
                 <b style="color:#555;font-size:11px">MENÚ DE ACCIONES:</b>
@@ -75,16 +85,13 @@
             pList.innerHTML = '';
             data.filter(x => x.n.toLowerCase().includes(query.toLowerCase())).forEach(x => {
                 const o = d.createElement('option'); 
-                o.value = x.f; 
-                o.dataset.cta = x.cta;
-                o.text = x.n; 
+                o.value = x.f; o.dataset.cta = x.cta; o.text = x.n; 
                 pList.add(o);
             });
         };
 
         filterInput.oninput = e => updateView(e.target.value);
         updateView('');
-
         pList.ondblclick = () => runSearch(pList.value);
 
         const loadDeck = () => {
@@ -96,19 +103,14 @@
         };
         loadDeck();
 
-        g('resetBtn').onclick = () => { localStorage.removeItem('sam_cache'); localStorage.removeItem('sam_date'); initAssistant(); };
+        g('resetBtn').onclick = () => { localStorage.removeItem('sam_cache'); localStorage.removeItem('sam_date_iso'); initAssistant(); };
         g('searchBtn').onclick = () => runSearch(pList.value);
         
         g('goToFichaBtn').onclick = () => {
             const selectedOpt = pList.options[pList.selectedIndex];
             if (!selectedOpt) return;
             const ctaValue = selectedOpt.dataset.cta;
-            if (ctaValue) {
-                // Abre en nueva pestaña para no cerrar el SAM actual
-                window.open('http://10.7.33.28/hlcm6/atehos003.php?id=' + ctaValue, '_blank');
-            } else {
-                alert('No se encontró CTA CTE.');
-            }
+            if (ctaValue) window.open('http://10.7.33.28/hlcm6/atehos003.php?id=' + ctaValue, '_blank');
         };
     };
 
@@ -124,7 +126,6 @@
                 const c = r.querySelectorAll('td');
                 return (c.length > 7) ? { f: c[5].innerText.trim(), cta: c[6].innerText.trim(), n: c[7].innerText.trim() } : null;
             }).filter(x => x);
-            
             localStorage.setItem('sam_cache', JSON.stringify(cleanData));
             localStorage.setItem('sam_map', mapId);
             renderPatientScanner(cleanData);
@@ -134,37 +135,12 @@
     const initAssistant = () => {
         const cachedData = localStorage.getItem('sam_cache');
         if (cachedData) { renderPatientScanner(JSON.parse(cachedData)); return; }
-        
-        b.innerHTML = `
-            <b style="color:#004589">SELECCIONE SERVICIO</b>
-            <select id="v" size="14" style="width:100%;margin:8px 0;font-size:11px;flex-grow:1">
-                <option value="75" data-map="2" style="font-weight:bold;color:#004589">ONCOLOGIA</option>
-                <option value="86" data-map="1" style="font-weight:bold;color:#004589">UPC PEDIATRICA</option>
-                <option value="3221" data-map="5" style="font-weight:bold;color:#004589">2da INFANCIA</option>
-                <option value="78" data-map="3" style="font-weight:bold;color:#004589">UTI TPH</option>
-                <option value="82" data-map="4" style="font-weight:bold;color:#004589">UPC CARDIOVASCULAR</option>
-                <option value="83" data-map="12" style="font-weight:bold;color:#004589">UPC NEONATAL</option>
-                <option value="3190" data-map="3" style="font-weight:bold;color:#004589">CAE TRASPLANTE MEDULA</option>
-                <option disabled>----------------</option>
-                <option value="74" data-map="10">LACTANTES</option>
-                <option value="73" data-map="6">CIRUGIA</option>
-                <option value="3176" data-map="6">HOSP DIA QUIRURGICO</option>
-                <option value="61" data-map="11">PENSIONADO</option>
-                <option value="15" data-map="6">DIALISIS</option>
-                <option value="62" data-map="6">PSICUIATRIA</option>
-                <option value="3403" data-map="6">AGUDO INDIF. B</option>
-                <option value="3268" data-map="1">UAI PEDIATRICO</option>
-                <option value="80" data-map="6">URGENCIA</option>
-            </select>
-            <button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>
-        `;
-
+        b.innerHTML = '<b style="color:#004589">SELECCIONE SERVICIO</b><select id="v" size="14" style="width:100%;margin:8px 0;font-size:11px;flex-grow:1"><option value="75" data-map="2" style="font-weight:bold;color:#004589">ONCOLOGIA</option><option value="86" data-map="1" style="font-weight:bold;color:#004589">UPC PEDIATRICA</option><option value="3221" data-map="5" style="font-weight:bold;color:#004589">2da INFANCIA</option><option value="78" data-map="3" style="font-weight:bold;color:#004589">UTI TPH</option><option value="82" data-map="4" style="font-weight:bold;color:#004589">UPC CARDIOVASCULAR</option><option value="83" data-map="12" style="font-weight:bold;color:#004589">UPC NEONATAL</option><option value="3190" data-map="3" style="font-weight:bold;color:#004589">CAE TRASPLANTE MEDULA</option><option disabled>----------------</option><option value="74" data-map="10">LACTANTES</option><option value="73" data-map="6">CIRUGIA</option><option value="3176" data-map="6">HOSP DIA QUIRURGICO</option><option value="61" data-map="11">PENSIONADO</option><option value="15" data-map="6">DIALISIS</option><option value="62" data-map="6">PSICUIATRIA</option><option value="3403" data-map="6">AGUDO INDIF. B</option><option value="3268" data-map="1">UAI PEDIATRICO</option><option value="80" data-map="6">URGENCIA</option></select><button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>';
         const serviceSelect = g('v');
         const triggerFetch = () => {
             const opt = serviceSelect.options[serviceSelect.selectedIndex];
             if (opt && !opt.disabled) fetchPatients(serviceSelect.value, opt.getAttribute('data-map'));
         };
-
         g('go').onclick = triggerFetch;
         serviceSelect.ondblclick = triggerFetch;
     };
