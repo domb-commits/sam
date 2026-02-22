@@ -58,8 +58,9 @@
             </div>
             <div style="flex-grow:1;display:flex;flex-direction:column;min-height:150px">
                 <input id="filter" placeholder="Filtrar paciente..." style="width:100%;margin-bottom:5px;box-sizing:border-box;padding:4px;">
-                <select id="pList" size="10" style="width:100%;font-size:11px;flex-grow:1;border:1px solid #999;background:#fff;"></select>
-                <button id="searchBtn" style="width:100%;height:35px;background:#004589;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold">BUSCAR FICHA</button>
+                <select id="pList" size="7" style="width:100%;font-size:11px;flex-grow:1;border:1px solid #999;background:#fff;"></select>
+                <button id="searchBtn" style="width:100%;height:35px;background:#004589;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">BUSCAR FICHA</button>
+                <button id="goToFichaBtn" style="width:100%;height:35px;background:#e67e22;color:#fff;border:none;margin-top:5px;cursor:pointer;font-weight:bold;flex-shrink:0;">IR A FICHA PACIENTE</button>
             </div>
             <div style="flex-shrink:0;margin-top:10px;border-top:2px solid #ccc;padding-top:10px">
                 <b style="color:#555;font-size:11px">MENÚ DE ACCIONES:</b>
@@ -72,7 +73,11 @@
         const updateView = (query) => {
             pList.innerHTML = '';
             data.filter(x => x.n.toLowerCase().includes(query.toLowerCase())).forEach(x => {
-                const o = d.createElement('option'); o.value = x.f; o.text = x.n; pList.add(o);
+                const o = d.createElement('option'); 
+                o.value = x.f; 
+                o.dataset.cta = x.cta; // Guardamos el CTA CTE en un atributo de datos
+                o.text = x.n; 
+                pList.add(o);
             });
         };
 
@@ -92,6 +97,19 @@
 
         g('resetBtn').onclick = () => { localStorage.removeItem('sam_cache'); localStorage.removeItem('sam_date'); initAssistant(); };
         g('searchBtn').onclick = () => runSearch(pList.value);
+        
+        // Nueva logica para el boton de "Ir a ficha paciente"
+        g('goToFichaBtn').onclick = () => {
+            const selectedOpt = pList.options[pList.selectedIndex];
+            if (!selectedOpt) return; // No hacer nada si no hay paciente seleccionado
+            
+            const ctaValue = selectedOpt.dataset.cta;
+            if (ctaValue) {
+                window.location.href = 'http://10.7.33.28/hlcm6/atehos003.php?id=' + ctaValue;
+            } else {
+                alert('No se encontró CTA CTE para este paciente.');
+            }
+        };
     };
 
     const fetchPatients = async (serviceId, mapId) => {
@@ -104,8 +122,10 @@
             const rows = Array.from((tbls[1] || tbls[0]).querySelectorAll('tr')).slice(1);
             const cleanData = rows.map(r => {
                 const c = r.querySelectorAll('td');
-                return (c.length > 7) ? { f: c[5].innerText.trim(), n: c[7].innerText.trim() } : null;
+                // Extraemos c[5] para Ficha, c[6] para CTA CTE, c[7] para Nombre
+                return (c.length > 7) ? { f: c[5].innerText.trim(), cta: c[6].innerText.trim(), n: c[7].innerText.trim() } : null;
             }).filter(x => x);
+            
             localStorage.setItem('sam_cache', JSON.stringify(cleanData));
             localStorage.setItem('sam_map', mapId);
             renderPatientScanner(cleanData);
@@ -129,46 +149,4 @@
                 <option disabled>----------------</option>
                 <option value="74" data-map="10">LACTANTES</option>
                 <option value="73" data-map="6">CIRUGIA</option>
-                <option value="3176" data-map="6">HOSP DIA QUIRURGICO</option>
-                <option value="61" data-map="11">PENSIONADO</option>
-                <option value="15" data-map="6">DIALISIS</option>
-                <option value="62" data-map="6">PSICUIATRIA</option>
-                <option value="3403" data-map="6">AGUDO INDIF. B</option>
-                <option value="3268" data-map="1">UAI PEDIATRICO</option>
-                <option value="80" data-map="6">URGENCIA</option>
-            </select>
-            <button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>
-        `;
-
-        const serviceSelect = g('v');
-        const triggerFetch = () => {
-            const opt = serviceSelect.options[serviceSelect.selectedIndex];
-            if (opt && !opt.disabled) fetchPatients(serviceSelect.value, opt.getAttribute('data-map'));
-        };
-
-        // Click button logic
-        g('go').onclick = triggerFetch;
-        // Double click logic
-        serviceSelect.ondblclick = triggerFetch;
-    };
-
-    g('cls').onclick = () => m.remove();
-    g('min').onclick = () => {
-        const isOpen = b.style.display !== 'none';
-        b.style.display = isOpen ? 'none' : 'flex';
-        m.style.height = isOpen ? 'auto' : '600px';
-    };
-
-    let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
-    h.onmousedown = e => {
-        if (e.target.id === 'min' || e.target.id === 'cls') return;
-        e.preventDefault(); p3 = e.clientX; p4 = e.clientY;
-        d.onmouseup = () => { d.onmouseup = null; d.onmousemove = null; };
-        d.onmousemove = e => {
-            e.preventDefault(); p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY;
-            m.style.top = (m.offsetTop - p2) + 'px'; m.style.left = (m.offsetLeft - p1) + 'px';
-        };
-    };
-
-    initAssistant();
-})();
+                <option value="3176" data-map="6">HOSP DIA QUIR
