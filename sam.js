@@ -149,4 +149,44 @@
                 <option disabled>----------------</option>
                 <option value="74" data-map="10">LACTANTES</option>
                 <option value="73" data-map="6">CIRUGIA</option>
-                <option value="3176" data-map="6">HOSP DIA QUIR
+                <option value="3176" data-map="6">HOSP DIA QUIRURGICO</option>
+                <option value="61" data-map="11">PENSIONADO</option>
+                <option value="15" data-map="6">DIALISIS</option>
+                <option value="62" data-map="6">PSICUIATRIA</option>
+                <option value="3403" data-map="6">AGUDO INDIF. B</option>
+                <option value="3268" data-map="1">UAI PEDIATRICO</option>
+                <option value="80" data-map="6">URGENCIA</option>
+            </select>
+            <button id="go" style="width:100%;height:40px;background:#004589;color:#fff;border:none;border-radius:5px;cursor:pointer;flex-shrink:0">CARGAR LISTA</button>
+        `;
+
+        const serviceSelect = g('v');
+        const triggerFetch = () => {
+            const opt = serviceSelect.options[serviceSelect.selectedIndex];
+            if (opt && !opt.disabled) fetchPatients(serviceSelect.value, opt.getAttribute('data-map'));
+        };
+
+        g('go').onclick = triggerFetch;
+        serviceSelect.ondblclick = triggerFetch;
+    };
+
+    g('cls').onclick = () => m.remove();
+    g('min').onclick = () => {
+        const isOpen = b.style.display !== 'none';
+        b.style.display = isOpen ? 'none' : 'flex';
+        m.style.height = isOpen ? 'auto' : '600px';
+    };
+
+    let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
+    h.onmousedown = e => {
+        if (e.target.id === 'min' || e.target.id === 'cls') return;
+        e.preventDefault(); p3 = e.clientX; p4 = e.clientY;
+        d.onmouseup = () => { d.onmouseup = null; d.onmousemove = null; };
+        d.onmousemove = e => {
+            e.preventDefault(); p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY;
+            m.style.top = (m.offsetTop - p2) + 'px'; m.style.left = (m.offsetLeft - p1) + 'px';
+        };
+    };
+
+    initAssistant();
+})();
